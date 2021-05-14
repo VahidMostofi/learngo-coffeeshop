@@ -4,11 +4,54 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"regexp"
 	"time"
 
-	"github.com/go-playground/validator"
+	"github.com/go-playground/locales/en"
+	ut "github.com/go-playground/universal-translator"
+	"github.com/go-playground/validator/v10"
+	en_translations "github.com/go-playground/validator/v10/translations/en"
 )
+
+var validate *validator.Validate
+var trans ut.Translator
+
+func init() {
+	translator := en.New()
+	uni := ut.New(translator, translator)
+
+	trans, _ = uni.GetTranslator("en")
+
+	validate = validator.New()
+
+	if err := en_translations.RegisterDefaultTranslations(validate, trans); err != nil {
+		log.Fatalf("failed to register a default translation to validator: %w", err)
+	}
+
+	validate.RegisterValidation("sku", validateSKU)
+
+	// validate.RegisterTranslation("required", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("required", "{0} is a required field.", true)
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("required", fe.Field())
+	// 	return t
+	// })
+
+	// validate.RegisterTranslation("gt", trans, func(ut ut.Translator) error {
+	// 	return ut.Add("gt", "{0} must be greater than {1}.", true)
+	// }, func(ut ut.Translator, fe validator.FieldError) string {
+	// 	t, _ := ut.T("gt", fe.Field(), fe.Param())
+	// 	return t
+	// })
+
+	validate.RegisterTranslation("sku", trans, func(ut ut.Translator) error {
+		return ut.Add("sku", "{0} must follow this regex format: {1}.", true)
+	}, func(ut ut.Translator, fe validator.FieldError) string {
+		t, _ := ut.T("sku", fe.Field(), "'[a-z]+-[a-z]+-[a-z]+'")
+		return t
+	})
+}
 
 // Product defines the structure for an API product
 type Product struct {
@@ -27,9 +70,16 @@ func (p *Product) FromJSON(r io.Reader) error {
 	return e.Decode(p)
 }
 
+func TranslateError(e error) map[string]string {
+	res := make(map[string]string)
+	// return e.(validator.ValidationErrors).Translate(trans)
+	for _, e := range e.(validator.ValidationErrors) {
+		res[e.Field()] = e.Translate(trans)
+	}
+	return res
+}
+
 func (p *Product) Validate() error {
-	validate := validator.New()
-	validate.RegisterValidation("sku", validateSKU)
 	return validate.Struct(p)
 }
 
