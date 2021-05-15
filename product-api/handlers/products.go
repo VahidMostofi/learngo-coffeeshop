@@ -1,3 +1,17 @@
+// Package classification of Product API
+//
+// Documentation for Product API
+//
+// Schemes: http
+// BasePath: /
+// Version: 1.0.0
+//
+// Consumes:
+// - application/json
+//
+// Produces:
+// - application/json
+// swagger:meta
 package handlers
 
 import (
@@ -11,6 +25,29 @@ import (
 	"github.com/vahidmostofi/coffeeshop/data"
 )
 
+// A list of products returns in the response
+// swagger:response productsResponse
+type productsResponseWrapper struct {
+	// All products in the system
+	// in: body
+	Body []data.Product
+}
+
+// One product returns in the response
+// swagger:response productResponse
+type productResponseWrapper struct {
+	// in: body
+	Body data.Product
+}
+
+// swagger:parameters updateProduct
+type productIDParameterWrapper struct {
+	// The id of the product to delete from the database
+	// in: path
+	// required: true
+	ID int `json:"id"`
+}
+
 type Products struct {
 	l *log.Logger
 }
@@ -19,6 +56,12 @@ func NewProduct(l *log.Logger) *Products {
 	return &Products{l: l}
 }
 
+// swagger:route GET /products products listProducts
+// Returns a list of products
+// responses:
+//	200: productsResponse
+
+// GetProducts ...
 func (p *Products) GetProducts(rw http.ResponseWriter, r *http.Request) {
 	p.l.Println("Handle Get Products")
 	lp := data.GetProducts()
@@ -35,6 +78,12 @@ func (p *Products) AddProduct(rw http.ResponseWriter, r *http.Request) {
 	data.AddProduct(prod)
 }
 
+// swagger:route PUT /products/{id} products updateProduct
+// Returns updated product
+// responses:
+//	200: productResponse
+
+// UpdateProduct updates one product on the database
 func (p *Products) UpdateProduct(rw http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	idStr := vars["id"]

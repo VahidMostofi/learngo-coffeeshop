@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"time"
 
+	"github.com/go-openapi/runtime/middleware"
 	"github.com/gorilla/mux"
 	"github.com/nicholasjackson/env"
 	"github.com/vahidmostofi/coffeeshop/handlers"
@@ -35,6 +36,11 @@ func main() {
 	postRouter.HandleFunc("/", ph.AddProduct)
 	postRouter.Use(ph.MidlewareProductValidation)
 
+	opts := middleware.RedocOpts{SpecURL: "/swagger.yml"}
+	sh := middleware.Redoc(opts, nil)
+
+	getRouter.Handle("/docs", sh)
+	getRouter.Handle("/swagger.yml", http.FileServer(http.Dir("./")))
 	s := http.Server{
 		Addr:         *bindAddress,      // configure the bind address
 		Handler:      sm,                // set the default handler
