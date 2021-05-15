@@ -41,6 +41,14 @@ paths:
           $ref: '#/responses/productsResponse'
       tags:
       - products
+    post:
+      description: Returns new product
+      operationId: createProduct
+      responses:
+        "200":
+          $ref: '#/responses/productResponse'
+      tags:
+      - products
   /products/{id}:
     put:
       description: Returns updated product
