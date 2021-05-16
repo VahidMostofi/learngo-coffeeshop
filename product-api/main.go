@@ -12,6 +12,7 @@ import (
 	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"github.com/nicholasjackson/env"
+	"github.com/vahidmostofi/coffeeshop/data"
 	"github.com/vahidmostofi/coffeeshop/handlers"
 )
 
@@ -21,22 +22,29 @@ func main() {
 	env.Parse()
 
 	l := log.New(os.Stdout, "products-api ", log.LstdFlags)
+	v := data.NewValidation()
 
-	ph := handlers.NewProduct(l)
+	ph := handlers.NewProducts(l, v)
 
 	sm := mux.NewRouter()
 
+	// CRUD operations
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
-	getRouter.HandleFunc("/", ph.GetProducts)
+	getRouter.HandleFunc("/products", ph.ListAll)
+	getRouter.HandleFunc("/products/{id:[0-9]+}", ph.ListSingle)
 
 	putRouter := sm.Methods(http.MethodPut).Subrouter()
-	putRouter.HandleFunc("/{id:[0-9]+}", ph.UpdateProduct)
-	putRouter.Use(ph.MidlewareProductValidation)
+	putRouter.HandleFunc("/products/{id:[0-9]+}", ph.Update)
+	putRouter.Use(ph.MiddlewareValidateProduct)
 
 	postRouter := sm.Methods(http.MethodPost).Subrouter()
-	postRouter.HandleFunc("/", ph.AddProduct)
-	postRouter.Use(ph.MidlewareProductValidation)
+	postRouter.HandleFunc("/products", ph.Create)
+	postRouter.Use(ph.MiddlewareValidateProduct)
 
+	deleteRouter := sm.Methods(http.MethodDelete).Subrouter()
+	deleteRouter.HandleFunc("/products/{id:[0-9]+}", ph.Delete)
+
+	// Swagger documentations
 	opts := middleware.RedocOpts{SpecURL: "/swagger.yml"}
 	sh := middleware.Redoc(opts, nil)
 
