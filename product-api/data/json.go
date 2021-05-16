@@ -1,8 +1,8 @@
 package data
 
 import (
-	"io"
 	"encoding/json"
+	"io"
 )
 
 // ToJSON serializes the given interface into a

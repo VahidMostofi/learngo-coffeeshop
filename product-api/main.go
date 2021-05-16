@@ -27,6 +27,7 @@ func main() {
 	ph := handlers.NewProducts(l, v)
 
 	sm := mux.NewRouter()
+	sm.Use(ph.CommonMiddleware)
 
 	// CRUD operations
 	getRouter := sm.Methods(http.MethodGet).Subrouter()

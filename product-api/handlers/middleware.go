@@ -1,6 +1,6 @@
 package handlers
 
-import(
+import (
 	"context"
 	"net/http"
 
@@ -37,5 +37,12 @@ func (p *Products) MiddlewareValidateProduct(next http.Handler) http.Handler {
 
 		// Call the next handler, which can be another middleware in the chain, or the final handler.
 		next.ServeHTTP(rw, r)
+	})
+}
+
+func (p *Products) CommonMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Content-Type", "application/json")
+		next.ServeHTTP(w, r)
 	})
 }
